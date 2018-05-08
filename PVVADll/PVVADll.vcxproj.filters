@@ -83,5 +83,8 @@
     <ClInclude Include="PVVADll.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\CUDADLL\CUDADLL.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

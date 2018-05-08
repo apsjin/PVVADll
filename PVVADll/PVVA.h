@@ -63,6 +63,8 @@ public:
 	void getField(Field * _field); // 返回结果
 
 	void CalPlane(double dis); //计算平面传播 并更新平面位置
+	
+	void ReflectCUDA();
 
 	void Reflect(); // 计算反射 改变了Exyz_R的相位和极化 更新了反射坐标
 

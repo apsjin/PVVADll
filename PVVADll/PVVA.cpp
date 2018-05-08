@@ -2,6 +2,7 @@
 #include "Position3D.h"
 #include "Matrix4D.h"
 #include "Vector3D.h"
+#include "CUDADLL.h"
 #include <cmath>
 #include <vtkFloatArray.h>
 #include <vtkPoints.h>
@@ -697,6 +698,264 @@ void PVVA::CalPlane(double dis)
 	SourceGraphTrans.updateTranslate(Org_Source);
 }
 
+void PVVA::ReflectCUDA() {
+
+				//cout << "Calculating Reflecting surface" << endl;
+
+				// 遍历每一个点 N * M * EleNum 
+	Vector3 InterPoint;
+	Vector3 Reflight, n_light; // 反射光线 和 法向量
+	Vector3 n_light_Plane;  // 相对于平面的法向量
+
+							// 绝对坐标系转换到源的坐标系（只求旋转）
+	Vector3D RotateAsixSou(SourceGraphTrans.getRotate_x(),
+		SourceGraphTrans.getRotate_y(),
+		SourceGraphTrans.getRotate_z());
+	Matrix4D rotatMatrixSou = Matrix4D::getRotateMatrix(
+		-SourceGraphTrans.getRotate_theta(), RotateAsixSou);
+
+	Vector3 tempa, tempb;
+
+	double dir_t;  // 坡印廷矢量方向的系数
+	double plane_t;
+	double d1, d2; //虚拟路径
+	double tempphase; // 相位
+	complex<double> tempejphase; // = exp(j*phase)
+	RayTracing rayTracing(mirror);
+	rayTracing.SetupNodes();//这个是设定一个Buffer 存节点
+
+	bool isInter = false;
+	int returnNum = 0;
+	int returnScale = N / 10;
+
+	//利用CUDA进行交点计算
+	//传递变量 为bool* int* float* 
+	//存储相交结果
+	int NumPoints = N*M;
+	bool* intersected;  intersected = (bool*)malloc(NumPoints * sizeof(bool));
+	int* STLIndex;		STLIndex = (int*)malloc(NumPoints * sizeof(int));
+	float* prot;		prot = (float*)malloc(NumPoints * sizeof(float));
+	float* inter_x;		inter_x = (float*)malloc(NumPoints * sizeof(float));
+	float* inter_y;		inter_y = (float*)malloc(NumPoints * sizeof(float));
+	float* inter_z;		inter_z = (float*)malloc(NumPoints * sizeof(float));
+	//入射场的输入量
+	float* psourcex;	psourcex = (float*)malloc(NumPoints * sizeof(float));
+	float* psourcey;	psourcey = (float*)malloc(NumPoints * sizeof(float));
+	float* psourcez;	psourcez = (float*)malloc(NumPoints * sizeof(float));
+	float* pdirx;		pdirx = (float*)malloc(NumPoints * sizeof(float));
+	float* pdiry;		pdiry = (float*)malloc(NumPoints * sizeof(float));
+	float* pdirz;		pdirz = (float*)malloc(NumPoints * sizeof(float));
+
+	int index;
+	for (int n = 0; n < N; n++) {
+		for (int m = 0; m < M; m++) {
+			index = m + n*M;
+			psourcex[index] = Plane[n][m].x;
+			psourcey[index] = Plane[n][m].y;
+			psourcez[index] = Plane[n][m].z;
+
+			pdirx[index] = n_Plane[n][m].x;
+			pdiry[index] = n_Plane[n][m].y;
+			pdirz[index] = n_Plane[n][m].z;
+		}
+	}
+
+	//镜面的输入量
+	vtkSmartPointer<vtkPolyData> polyData = mirror->getPolyData();
+	int NumSTL = polyData->GetNumberOfCells();
+	float* stlp1x;	stlp1x = (float*)malloc(NumSTL * sizeof(float));
+	float* stlp1y;	stlp1y = (float*)malloc(NumSTL * sizeof(float));
+	float* stlp1z;	stlp1z = (float*)malloc(NumSTL * sizeof(float));
+	float* stlp2x;	stlp2x = (float*)malloc(NumSTL * sizeof(float));
+	float* stlp2y;	stlp2y = (float*)malloc(NumSTL * sizeof(float));
+	float* stlp2z;	stlp2z = (float*)malloc(NumSTL * sizeof(float));
+	float* stlp3x;	stlp3x = (float*)malloc(NumSTL * sizeof(float));
+	float* stlp3y;	stlp3y = (float*)malloc(NumSTL * sizeof(float));
+	float* stlp3z;	stlp3z = (float*)malloc(NumSTL * sizeof(float));
+
+	vtkIdList * p;
+	double * point;
+	//读取各点的位置
+	for (int i = 0; i < NumSTL; i++) {
+		p = polyData->GetCell(i)->GetPointIds();
+		//点1
+		point = polyData->GetPoint(p->GetId(0));
+		stlp1x[i] = point[0]; stlp1y[i] = point[1]; stlp1z[i] = point[2];
+		//点2
+		point = polyData->GetPoint(p->GetId(1));
+		stlp2x[i] = point[0]; stlp2y[i] = point[1]; stlp2z[i] = point[2];
+		//点3
+		point = polyData->GetPoint(p->GetId(2));
+		stlp3x[i] = point[0]; stlp3y[i] = point[1]; stlp3z[i] = point[2];
+	}
+
+	DeviceInf();//CUDADLL_API
+	//利用CUDA计算交点
+	RunReflectionLine(NumPoints,psourcex,psourcey,psourcez,pdirx,pdiry,pdirz,
+					 intersected,prot,STLIndex,inter_x,inter_y,inter_z,
+		             NumSTL,stlp1x,stlp1y,stlp1z,stlp2x,stlp2y,stlp2z,stlp3x,stlp3y,stlp3z);
+	
+	
+	//相交面元三个点：
+	Vector3 P1(0.0, 0.0, 0.0);
+	Vector3 P2(0.0, 0.0, 0.0);
+	Vector3 P3(0.0, 0.0, 0.0);
+
+	//完成交点计算
+	for (int i = 0; i < N; i++)
+	{
+		if (returnFloat) // 如果没有注册则不回调
+		{
+			if (i >= returnNum * returnScale)
+			{
+				returnFloat(20 + 5 * returnNum, user);
+				returnNum++;
+			}
+		}
+		for (int j = 0; j < M; j++)
+		{	
+			index = j + i*M;
+			Ex_R[i][j] = 0;
+			Ey_R[i][j] = 0;
+			Ez_R[i][j] = 0;
+			R_Plane[i][j] = 0;
+			//这里开始，计算光线追踪交点-这里是慢的地方，只需要对这里进行CUDA加速即可
+			if (!intersected[index])	continue;//没相交就不用算了
+			//下面的就都是相交的了！
+			InterPoint = Vector3(double(inter_x[index]), double(inter_y[index]), double(inter_z[index]));
+			dir_t = double(prot[index]);
+			p = polyData->GetCell(STLIndex[index])->GetPointIds();
+			//点1
+			point = polyData->GetPoint(p->GetId(0));
+			P1 = Vector3(point[0], point[1], point[2]);
+			//点2
+			point = polyData->GetPoint(p->GetId(1));
+			P2 = Vector3(point[0], point[1], point[2]);
+			//点3
+			point = polyData->GetPoint(p->GetId(2));
+			P3 = Vector3(point[0], point[1], point[2]);
+			//Compute n_light
+			//Vector3 tempa = NodesXYZ1 - NodesXYZ2;
+			//Vector3 tempb = NodesXYZ1 - NodesXYZ3;
+			//Vector3 n_light = tempa.Cross(tempb);  //法向量
+			n_light = (P1-P2).Cross(P1-P3);  //法向量
+
+			//这里改动结束，主需要对以上部分进行CUDA加速
+			n_light.Normalization();
+
+
+			// 将反射面法向量转化到源坐标系上(先转换到绝对坐标系)
+			n_light_Plane = rotatMatrixSou * n_light;
+			n_light_Plane.Normalization();  // 单位化
+											// 只做极化变换
+			CalReflectExyz(n_light_Plane, Ex1[i][j], Ey1[i][j],
+				Ez1[i][j], Ex_R[i][j], Ey_R[i][j], Ez_R[i][j]);
+
+			// 反射光线
+			Reflight = RayTracing::reflectLight(n_Plane[i][j], n_light);
+			Rn_Plane[i][j] = Reflight;
+
+			if (dir_t > 0.0000000001)  // 平面在反射面的前面
+			{
+				plane_t = IntersectPlane(InterPoint, Reflight,
+					Org_Source, R_Source, R_Plane[i][j]);
+				d2 = CalDistance(InterPoint, R_Plane[i][j]);
+				d1 = CalDistance(InterPoint, Plane[i][j]);
+
+				if (plane_t > 0.0)  // 虚拟面2在反射面的前面
+					tempphase = -(d1 + d2) / lamda * 2 * Pi;
+				else
+					tempphase = -(d1 - d2) / lamda * 2 * Pi;
+				tempejphase = complex <double>(cos(tempphase), sin(tempphase));
+				Ex_R[i][j] = ComMul(Ex_R[i][j], tempejphase);  // 只做相位变换
+				Ey_R[i][j] = ComMul(Ey_R[i][j], tempejphase);
+				Ez_R[i][j] = ComMul(Ez_R[i][j], tempejphase);
+			}
+			else if (dir_t < -0.0000000001)   // 平面在反射面的后面
+			{
+				plane_t = IntersectPlane(InterPoint, Reflight,
+					Org_Source, R_Source, R_Plane[i][j]);
+				d2 = CalDistance(InterPoint, R_Plane[i][j]);
+				d1 = CalDistance(InterPoint, Plane[i][j]);
+
+				if (plane_t < 0.0)  // 虚拟面2在反射面的后面
+					tempphase = (d1 + d2) / lamda * 2 * Pi;
+				else
+					tempphase = (d1 - d2) / lamda * 2 * Pi;
+				tempejphase = complex <double>(cos(tempphase), sin(tempphase));
+				Ex_R[i][j] = ComMul(Ex_R[i][j], tempejphase); // 只做相位变换
+				Ey_R[i][j] = ComMul(Ey_R[i][j], tempejphase);
+				Ez_R[i][j] = ComMul(Ez_R[i][j], tempejphase);
+			}
+			else  // 平面与反射面相交
+			{
+				R_Plane[i][j] = InterPoint;
+			}
+		}
+	} // endloop
+
+	CalAmplitude();  // 只做幅度变换
+
+	Matrix4D rotatMatrixSou1 = Matrix4D::getRotateMatrix(
+		SourceGraphTrans.getRotate_theta(), RotateAsixSou);
+
+	//源的传播方向改变
+	n_Source = R_Source;
+	n_Source.Normalization();
+	updateSource_n(n_Source);
+
+	Vector3D RotateAsixSou2(SourceGraphTrans.getRotate_x(),
+		SourceGraphTrans.getRotate_y(),
+		SourceGraphTrans.getRotate_z());
+	Matrix4D rotatMatrixSou2 = Matrix4D::getRotateMatrix(
+		-SourceGraphTrans.getRotate_theta(), RotateAsixSou2);
+	rotatMatrixSou1 = rotatMatrixSou2 * rotatMatrixSou1;
+
+
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < M; j++)
+		{
+			Vector3 tempReal(Ex_R[i][j].real(), Ey_R[i][j].real(), Ez_R[i][j].real());
+			Vector3 tempImag(Ex_R[i][j].imag(), Ey_R[i][j].imag(), Ez_R[i][j].imag());
+			tempReal = rotatMatrixSou1 * tempReal;
+			tempImag = rotatMatrixSou1 * tempImag;
+			Ex_R[i][j] = complex<double>(tempReal.x, tempImag.x);
+			Ey_R[i][j] = complex<double>(tempReal.y, tempImag.y);
+			Ez_R[i][j] = complex<double>(tempReal.z, tempImag.z);
+		}
+	}
+
+	if (returnFloat) // 如果没有注册则不回调
+	{
+		returnFloat(80, user);
+	}
+
+	//Free Memory
+	free(intersected); free(STLIndex);
+	free(prot);		
+	free(inter_x);
+	free(inter_y);
+	free(inter_z);
+	//入射场的输入量
+	free(psourcex);
+	free(psourcey);
+	free(psourcez);
+	free(pdirx);
+	free(pdiry);
+	free(pdirz);
+
+	free(stlp1x);
+	free(stlp1y);
+	free(stlp1z);
+	free(stlp2x);
+	free(stlp2y);
+	free(stlp2z);
+	free(stlp3x);
+	free(stlp3y);
+	free(stlp3z);
+}
+
 void PVVA::Reflect()  
 {
 	//cout << "Calculating Reflecting surface" << endl;
@@ -721,10 +980,12 @@ void PVVA::Reflect()
 	double tempphase; // 相位
 	complex<double> tempejphase; // = exp(j*phase)
 	RayTracing rayTracing(mirror);
+	rayTracing.SetupNodes();//这个是设定一个Buffer 存节点
 
 	bool isInter = false;
 	int returnNum = 0;
 	int returnScale = N / 10;
+
 	for (int i = 0; i < N; i++)
 	{
 		if (returnFloat) // 如果没有注册则不回调
@@ -742,12 +1003,15 @@ void PVVA::Reflect()
 			Ey_R[i][j] = 0;
 			Ez_R[i][j] = 0;
 			R_Plane[i][j] = 0;
+			//这里开始，计算光线追踪交点-这里是慢的地方，只需要对这里进行CUDA加速即可
 			rayTracing.calcNormalOfLine_Mirror(Plane[i][j],
 				n_Plane[i][j], n_light,
 				InterPoint, isInter, dir_t);
-			if (!isInter)
+			//重点计算焦点和法向，以及相交点是在镜前还是镜后
+			if (!isInter)//没相交就跳出当前循环，进行下一个
 				continue;
 			n_light.Normalization();
+			//这里结束，主需要对以上部分进行CUDA加速
 
 			// 将反射面法向量转化到源坐标系上(先转换到绝对坐标系)
 			n_light_Plane = rotatMatrixSou * n_light;

@@ -109,6 +109,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Program Files\VTK\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -160,6 +161,7 @@
     <ClCompile Include="Vector3D.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\CUDADLL\CUDADLL.h" />
     <ClInclude Include="FFT.h" />
     <ClInclude Include="FFTDI.h" />
     <ClInclude Include="fftw3.h" />
@@ -172,6 +174,11 @@
     <ClInclude Include="RayTracing.h" />
     <ClInclude Include="STLMirror.h" />
     <ClInclude Include="Vector3D.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CUDADLL\CUDADLL.vcxproj">
+      <Project>{2428086a-1640-4655-ad9d-7c8e76ecbe12}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

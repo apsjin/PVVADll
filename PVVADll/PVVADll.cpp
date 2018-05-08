@@ -46,7 +46,8 @@ void PVVADll::calculate(double fre, double dis)
 
 	pvva.setMirror(&stlMirror);
 	pvva.CalZ0Theta();
-	pvva.Reflect();
+	pvva.ReflectCUDA();
+	// pvva.Reflect();
 	pvva.InterVal();
 	
 	pvva.Result(dis);

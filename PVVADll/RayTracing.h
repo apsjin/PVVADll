@@ -43,6 +43,7 @@ namespace calculation
 
 		// 根据入射光线和法线求反射光线
 		static Vector3 reflectLight(const Vector3& a, const Vector3& n);
+		void SetupNodes(void);
 
 	private:
 
@@ -62,6 +63,12 @@ namespace calculation
 			Vector3 &normal, Vector3 &intersection,
 			bool &isIntersect, double &t);
 
+		void calcNormalOfLine_MirrorByPolyData_omp(const Vector3& startPiont,
+			const Vector3& direction,
+			Vector3 &normal, Vector3 &intersection,
+			bool &isIntersect, double &t);
+
+
 		// 三角形与直线相交判断
 		bool isIntersect(const Vector3 &orig, const Vector3 &dir,
 			const Vector3 &v0, const Vector3 &v1, const Vector3 &v2,
@@ -69,7 +76,9 @@ namespace calculation
 
 
 		STLMirror* mirror;
-
+		vector<Vector3> NodesXYZ1;
+		vector<Vector3> NodesXYZ2;
+		vector<Vector3> NodesXYZ3;
 	};
 
 }
