@@ -33,6 +33,12 @@
     <ClInclude Include="helper_string.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CUDARayTracing.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector3.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -42,6 +48,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CUADRayTracing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

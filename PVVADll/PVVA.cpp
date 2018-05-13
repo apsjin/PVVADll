@@ -2,7 +2,7 @@
 #include "Position3D.h"
 #include "Matrix4D.h"
 #include "Vector3D.h"
-#include "CUDADLL.h"
+#include "../CUDADLL/CUDARayTracing.h"
 #include <cmath>
 #include <vtkFloatArray.h>
 #include <vtkPoints.h>
@@ -700,14 +700,14 @@ void PVVA::CalPlane(double dis)
 
 void PVVA::ReflectCUDA() {
 
-				//cout << "Calculating Reflecting surface" << endl;
+	//cout << "Calculating Reflecting surface" << endl;
 
-				// 遍历每一个点 N * M * EleNum 
+    // 遍历每一个点 N * M * EleNum 
 	Vector3 InterPoint;
 	Vector3 Reflight, n_light; // 反射光线 和 法向量
 	Vector3 n_light_Plane;  // 相对于平面的法向量
 
-							// 绝对坐标系转换到源的坐标系（只求旋转）
+	// 绝对坐标系转换到源的坐标系（只求旋转）
 	Vector3D RotateAsixSou(SourceGraphTrans.getRotate_x(),
 		SourceGraphTrans.getRotate_y(),
 		SourceGraphTrans.getRotate_z());
@@ -729,77 +729,32 @@ void PVVA::ReflectCUDA() {
 	int returnScale = N / 10;
 
 	//利用CUDA进行交点计算
-	//传递变量 为bool* int* float* 
-	//存储相交结果
-	int NumPoints = N*M;
-	bool* intersected;  intersected = (bool*)malloc(NumPoints * sizeof(bool));
-	int* STLIndex;		STLIndex = (int*)malloc(NumPoints * sizeof(int));
-	float* prot;		prot = (float*)malloc(NumPoints * sizeof(float));
-	float* inter_x;		inter_x = (float*)malloc(NumPoints * sizeof(float));
-	float* inter_y;		inter_y = (float*)malloc(NumPoints * sizeof(float));
-	float* inter_z;		inter_z = (float*)malloc(NumPoints * sizeof(float));
-	//入射场的输入量
-	float* psourcex;	psourcex = (float*)malloc(NumPoints * sizeof(float));
-	float* psourcey;	psourcey = (float*)malloc(NumPoints * sizeof(float));
-	float* psourcez;	psourcez = (float*)malloc(NumPoints * sizeof(float));
-	float* pdirx;		pdirx = (float*)malloc(NumPoints * sizeof(float));
-	float* pdiry;		pdiry = (float*)malloc(NumPoints * sizeof(float));
-	float* pdirz;		pdirz = (float*)malloc(NumPoints * sizeof(float));
-
-	int index;
-	for (int n = 0; n < N; n++) {
-		for (int m = 0; m < M; m++) {
-			index = m + n*M;
-			psourcex[index] = Plane[n][m].x;
-			psourcey[index] = Plane[n][m].y;
-			psourcez[index] = Plane[n][m].z;
-
-			pdirx[index] = n_Plane[n][m].x;
-			pdiry[index] = n_Plane[n][m].y;
-			pdirz[index] = n_Plane[n][m].z;
-		}
-	}
-
-	//镜面的输入量
-	vtkSmartPointer<vtkPolyData> polyData = mirror->getPolyData();
-	int NumSTL = polyData->GetNumberOfCells();
-	float* stlp1x;	stlp1x = (float*)malloc(NumSTL * sizeof(float));
-	float* stlp1y;	stlp1y = (float*)malloc(NumSTL * sizeof(float));
-	float* stlp1z;	stlp1z = (float*)malloc(NumSTL * sizeof(float));
-	float* stlp2x;	stlp2x = (float*)malloc(NumSTL * sizeof(float));
-	float* stlp2y;	stlp2y = (float*)malloc(NumSTL * sizeof(float));
-	float* stlp2z;	stlp2z = (float*)malloc(NumSTL * sizeof(float));
-	float* stlp3x;	stlp3x = (float*)malloc(NumSTL * sizeof(float));
-	float* stlp3y;	stlp3y = (float*)malloc(NumSTL * sizeof(float));
-	float* stlp3z;	stlp3z = (float*)malloc(NumSTL * sizeof(float));
-
-	vtkIdList * p;
-	double * point;
-	//读取各点的位置
-	for (int i = 0; i < NumSTL; i++) {
-		p = polyData->GetCell(i)->GetPointIds();
-		//点1
-		point = polyData->GetPoint(p->GetId(0));
-		stlp1x[i] = point[0]; stlp1y[i] = point[1]; stlp1z[i] = point[2];
-		//点2
-		point = polyData->GetPoint(p->GetId(1));
-		stlp2x[i] = point[0]; stlp2y[i] = point[1]; stlp2z[i] = point[2];
-		//点3
-		point = polyData->GetPoint(p->GetId(2));
-		stlp3x[i] = point[0]; stlp3y[i] = point[1]; stlp3z[i] = point[2];
-	}
-
-	DeviceInf();//CUDADLL_API
+	CUDARayTracing CUDArayTracing;
+	CUDArayTracing.setRays(Plane, n_Plane, N, M);
+	CUDArayTracing.setSTL(mirror->getPolyData().GetPointer());
+	
 	//利用CUDA计算交点
-	RunReflectionLine(NumPoints,psourcex,psourcey,psourcez,pdirx,pdiry,pdirz,
-					 intersected,prot,STLIndex,inter_x,inter_y,inter_z,
-		             NumSTL,stlp1x,stlp1y,stlp1z,stlp2x,stlp2y,stlp2z,stlp3x,stlp3y,stlp3z);
-	
-	
+	if (CUDArayTracing.run() != 0)
+		return;		
+
+	// 得到结果
+	bool* intersected = CUDArayTracing.getIintersected();
+	float* prot = CUDArayTracing.getProt();
+
+	float *inter_x = CUDArayTracing.getInter_x();
+	float *inter_y = CUDArayTracing.getInter_y();
+	float *inter_z = CUDArayTracing.getInter_z();
+	int * STLIndex = CUDArayTracing.getSTLIndex();
+
 	//相交面元三个点：
 	Vector3 P1(0.0, 0.0, 0.0);
 	Vector3 P2(0.0, 0.0, 0.0);
 	Vector3 P3(0.0, 0.0, 0.0);
+	int index;
+
+	vtkIdList * p;
+	double * point;
+	vtkPolyData* polyData = mirror->getPolyData().GetPointer();
 
 	//完成交点计算
 	for (int i = 0; i < N; i++)
@@ -931,29 +886,6 @@ void PVVA::ReflectCUDA() {
 		returnFloat(80, user);
 	}
 
-	//Free Memory
-	free(intersected); free(STLIndex);
-	free(prot);		
-	free(inter_x);
-	free(inter_y);
-	free(inter_z);
-	//入射场的输入量
-	free(psourcex);
-	free(psourcey);
-	free(psourcez);
-	free(pdirx);
-	free(pdiry);
-	free(pdirz);
-
-	free(stlp1x);
-	free(stlp1y);
-	free(stlp1z);
-	free(stlp2x);
-	free(stlp2y);
-	free(stlp2z);
-	free(stlp3x);
-	free(stlp3y);
-	free(stlp3z);
 }
 
 void PVVA::Reflect()  
