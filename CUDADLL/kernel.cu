@@ -261,7 +261,7 @@ SetResultsZero(const int f_NumSource, const int f_NumSTL, bool* f_intersecb, flo
 
 
 
-CUDADLL_API void DeviceInf(void) {
+void DeviceInf(void) {
 	FILE* cudalog;
 	cudalog = fopen("./cudalog.txt", "w");
 	fprintf(cudalog," CUDA Device Query (Runtime API) version (CUDART static linking)\n\n");
@@ -495,7 +495,7 @@ CUDADLL_API void DeviceInf(void) {
 
 }
 
-CUDADLL_API void RunReflectionLine(int _NumPoints, float* _psourcex, float* _psourcey, float*  _psourcez,
+void RunReflectionLine(int _NumPoints, float* _psourcex, float* _psourcey, float*  _psourcez,
 											  float* _pdirx, float*  _pdiry, float*  _pdirz,
 											  bool* &_intersected, float* &_prot,int* &_STLIndex,
 												float* &_inter_x, float* &_inter_y, float* &_inter_z,

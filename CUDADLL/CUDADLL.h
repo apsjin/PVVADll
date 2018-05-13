@@ -16,11 +16,11 @@ using namespace std;
 #endif
 
 //extern "C" CUDADLL_API int vectorAdd(int c[], int a[], int b[], int size);
-extern "C" CUDADLL_API void DeviceInf(void);
+extern "C"  void DeviceInf(void);
 
 
 //这个函数利用CUDA计算 输入光线组 与 STL面元组的交点，然后返回：1，是否相交，2，距交点传播距离，3，与第几个STL相交，4，交点位置x,y,z
-extern "C" CUDADLL_API void RunReflectionLine(int _NumPoints, float* _psourcex, float* _psourcey, float*  _psourcez,
+extern "C" void RunReflectionLine(int _NumPoints, float* _psourcex, float* _psourcey, float*  _psourcez,
 	float* _pdirx, float*  _pdiry, float*  _pdirz,
 	bool* &_intersected, float* &_prot, int* &_STLIndex,
 	float* &_inter_x, float* &_inter_y, float* &_inter_z,
