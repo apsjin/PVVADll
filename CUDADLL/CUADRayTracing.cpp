@@ -173,11 +173,9 @@ void CUDARayTracing::setRays(Vector3 ** Plane, Vector3 ** n_Plane, int n, int m)
 {
 	numPoints = n*m;
 
-	intersected = new (std::nothrow) bool[numPoints];
-	//intersected = (bool*)malloc(numPoints * sizeof(bool));
-	STLIndex = new (std::nothrow) int[numPoints];
-	int temp = int(STLIndex) - int(intersected);
-	prot = new (std::nothrow) float[numPoints];
+	intersected = new bool[numPoints];
+	STLIndex = new int[numPoints];
+	prot = new float[numPoints];
 	inter_x = new float[numPoints];
 	inter_y = new float[numPoints];
 	inter_z = new float[numPoints];
