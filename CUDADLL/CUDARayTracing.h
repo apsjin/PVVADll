@@ -27,30 +27,35 @@ public:
 	float* getInter_y() const { return inter_y; }
 	float* getInter_z() const { return inter_z; }
 	int * getSTLIndex() const { return STLIndex; }
+
 private:
+	int numSTL;	
 	int numPoints;
-	float* psourcex;
-	float* psourcey;
-	float* psourcez;
-	float* pdirx; 
-	float* pdiry;
-	float* pdirz;
+
 	bool* intersected;
-	float* prot;
 	int* STLIndex;
+	float* prot;
 	float* inter_x;
 	float* inter_y;
 	float* inter_z;
-	int numSTL; 
+	float* psourcex;
+	float* psourcey;
+	float* psourcez;
+	float* pdirx;
+	float* pdiry;
+	float* pdirz;
+
 	float* stlp1x;
 	float* stlp1y;
 	float* stlp1z;
 	float* stlp2x;
-	float* stlp2y; 
+	float* stlp2y;
 	float* stlp2z;
 	float* stlp3x;
-	float* stlp3y; 
+	float* stlp3y;
 	float* stlp3z;
+	
+	
 };
 
 #endif // CUDARAYTRACING_H

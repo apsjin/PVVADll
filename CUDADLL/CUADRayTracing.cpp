@@ -142,15 +142,15 @@ void CUDARayTracing::setSTL(void* _polyData)
 {
 	vtkPolyData* polyData = (vtkPolyData*)(_polyData);
 	numSTL = polyData->GetNumberOfCells();
-	stlp1x = (float*)malloc(numSTL * sizeof(float));
-	stlp1y = (float*)malloc(numSTL * sizeof(float));
-	stlp1z = (float*)malloc(numSTL * sizeof(float));
-	stlp2x = (float*)malloc(numSTL * sizeof(float));
-	stlp2y = (float*)malloc(numSTL * sizeof(float));
-	stlp2z = (float*)malloc(numSTL * sizeof(float));
-	stlp3x = (float*)malloc(numSTL * sizeof(float));
-	stlp3y = (float*)malloc(numSTL * sizeof(float));
-	stlp3z = (float*)malloc(numSTL * sizeof(float));
+	stlp1x = new float[numSTL];
+	stlp1y = new float[numSTL];
+	stlp1z = new float[numSTL];
+	stlp2x = new float[numSTL];
+	stlp2y = new float[numSTL];
+	stlp2z = new float[numSTL];
+	stlp3x = new float[numSTL];
+	stlp3y = new float[numSTL];
+	stlp3z = new float[numSTL];
 
 	vtkIdList * p;
 	double * point;
@@ -172,19 +172,28 @@ void CUDARayTracing::setSTL(void* _polyData)
 void CUDARayTracing::setRays(Vector3 ** Plane, Vector3 ** n_Plane, int n, int m)
 {
 	numPoints = n*m;
-	intersected = (bool*)malloc(numPoints * sizeof(bool));
-	STLIndex = (int*)malloc(numPoints * sizeof(int));
-	prot = (float*)malloc(numPoints * sizeof(float));
-	inter_x = (float*)malloc(numPoints * sizeof(float));
-	inter_y = (float*)malloc(numPoints * sizeof(float));
-	inter_z = (float*)malloc(numPoints * sizeof(float));
-	//入射场的输入量
-	psourcex = (float*)malloc(numPoints * sizeof(float));
-	psourcey = (float*)malloc(numPoints * sizeof(float));
-	psourcez = (float*)malloc(numPoints * sizeof(float));
-	pdirx = (float*)malloc(numPoints * sizeof(float));
-	pdiry = (float*)malloc(numPoints * sizeof(float));
-	pdirz = (float*)malloc(numPoints * sizeof(float));
+
+	try {
+		intersected = new (std::nothrow) bool[numPoints];
+		//intersected = (bool*)malloc(numPoints * sizeof(bool));
+		STLIndex = new (std::nothrow) int[numPoints];
+		int temp = int(STLIndex) - int(intersected);
+		prot = new (std::nothrow) float[numPoints];
+		inter_x = new float[numPoints];
+		inter_y = new float[numPoints];
+		inter_z = new float[numPoints];
+		//入射场的输入量
+		psourcex = new float[numPoints];
+		psourcey = new float[numPoints];
+		psourcez = new float[numPoints];
+		pdirx = new float[numPoints];
+		pdiry = new float[numPoints];
+		pdirz = new float[numPoints];
+	}
+	catch (const bad_alloc& e) {
+		return;
+	}
+	
 	int index;
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < m; j++) {
