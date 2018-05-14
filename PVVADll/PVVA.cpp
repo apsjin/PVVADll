@@ -729,22 +729,22 @@ void PVVA::ReflectCUDA() {
 	int returnScale = N / 10;
 
 	//利用CUDA进行交点计算
-	CUDARayTracing CUDArayTracing;
-	CUDArayTracing.setRays(Plane, n_Plane, N, M);
-	CUDArayTracing.setSTL(mirror->getPolyData().GetPointer());
-	
+	CUDARayTracing *CUDArayTracing = new CUDARayTracing;
+	CUDArayTracing->setRays(Plane, n_Plane, N, M);
+	CUDArayTracing->setSTL(mirror->getPolyData().GetPointer());
+	//delete CUDArayTracing;
 	//利用CUDA计算交点
-	if (CUDArayTracing.run() != 0)
+	if (CUDArayTracing->run() != 0)
 		return;		
 
 	// 得到结果
-	bool* intersected = CUDArayTracing.getIintersected();
-	float* prot = CUDArayTracing.getProt();
+	bool* intersected = CUDArayTracing->getIintersected();
+	float* prot = CUDArayTracing->getProt();
 
-	float *inter_x = CUDArayTracing.getInter_x();
-	float *inter_y = CUDArayTracing.getInter_y();
-	float *inter_z = CUDArayTracing.getInter_z();
-	int * STLIndex = CUDArayTracing.getSTLIndex();
+	float *inter_x = CUDArayTracing->getInter_x();
+	float *inter_y = CUDArayTracing->getInter_y();
+	float *inter_z = CUDArayTracing->getInter_z();
+	int * STLIndex = CUDArayTracing->getSTLIndex();
 
 	//相交面元三个点：
 	Vector3 P1(0.0, 0.0, 0.0);
@@ -848,6 +848,8 @@ void PVVA::ReflectCUDA() {
 			}
 		}
 	} // endloop
+
+	delete CUDArayTracing;
 
 	CalAmplitude();  // 只做幅度变换
 
