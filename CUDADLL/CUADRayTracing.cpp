@@ -173,27 +173,22 @@ void CUDARayTracing::setRays(Vector3 ** Plane, Vector3 ** n_Plane, int n, int m)
 {
 	numPoints = n*m;
 
-	try {
-		intersected = new (std::nothrow) bool[numPoints];
-		//intersected = (bool*)malloc(numPoints * sizeof(bool));
-		STLIndex = new (std::nothrow) int[numPoints];
-		int temp = int(STLIndex) - int(intersected);
-		prot = new (std::nothrow) float[numPoints];
-		inter_x = new float[numPoints];
-		inter_y = new float[numPoints];
-		inter_z = new float[numPoints];
-		//入射场的输入量
-		psourcex = new float[numPoints];
-		psourcey = new float[numPoints];
-		psourcez = new float[numPoints];
-		pdirx = new float[numPoints];
-		pdiry = new float[numPoints];
-		pdirz = new float[numPoints];
-	}
-	catch (const bad_alloc& e) {
-		return;
-	}
-	
+	intersected = new (std::nothrow) bool[numPoints];
+	//intersected = (bool*)malloc(numPoints * sizeof(bool));
+	STLIndex = new (std::nothrow) int[numPoints];
+	int temp = int(STLIndex) - int(intersected);
+	prot = new (std::nothrow) float[numPoints];
+	inter_x = new float[numPoints];
+	inter_y = new float[numPoints];
+	inter_z = new float[numPoints];
+	//入射场的输入量
+	psourcex = new float[numPoints];
+	psourcey = new float[numPoints];
+	psourcez = new float[numPoints];
+	pdirx = new float[numPoints];
+	pdiry = new float[numPoints];
+	pdirz = new float[numPoints];
+
 	int index;
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < m; j++) {
