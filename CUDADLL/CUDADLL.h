@@ -6,6 +6,7 @@
 // 符号视为是被导出的。
 
 //下面创建一个CUDA Kernel 并把它做成DLL
+
 #include<vector>
 using namespace std;
 
@@ -28,7 +29,15 @@ extern "C" void RunReflectionLine(int _NumPoints, float* _psourcex, float* _psou
 	float* _stlp2x, float* _stlp2y, float* _stlp2z,
 	float* _stlp3x, float* _stlp3y, float* _stlp3z);
 
-/*
+extern "C" void RunReflectionLineS(int _NumPoints, float* _psourcex, float* _psourcey, float*  _psourcez,
+	float* _pdirx, float*  _pdiry, float*  _pdirz,
+	bool* &_intersected, float* &_prot, int* &_STLIndex,
+	float* &_inter_x, float* &_inter_y, float* &_inter_z,
+	int _NumSTL, float* _stlp1x, float* _stlp1y, float* _stlp1z,
+	float* _stlp2x, float* _stlp2y, float* _stlp2z,
+	float* _stlp3x, float* _stlp3y, float* _stlp3z);
+	
+	/*
 // 此类是从 CUDADLL.dll 导出的
 class CUDADLL_API CCUDADLL {
 public:

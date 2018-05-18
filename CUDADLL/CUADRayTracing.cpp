@@ -3,7 +3,9 @@
 #include <vtkPoints.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
-
+#include "cuVector3.cuh"
+//#include "CUDARayTracing_kernel.cu"
+//注意： 将调用Kernel.cu写成和调用cpp一样的名字+_kernel.cu，就自动引用其定义的函数，相当于引了.h
 
 CUDARayTracing::CUDARayTracing()
 	:numPoints(0),
@@ -121,12 +123,13 @@ CUDARayTracing::~CUDARayTracing()
 int CUDARayTracing::getCUDAInfo()
 {
 	//to do
-	DeviceInf();
+	DeviceInf();//这个可不是kernel函数哦
 	return 0;
 }
 
 int CUDARayTracing::run()
 {
+	
 	RunReflectionLine(numPoints, psourcex, psourcey, psourcez,
 		pdirx, pdiry, pdirz,
 		intersected, prot, STLIndex,
