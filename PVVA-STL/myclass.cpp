@@ -13,6 +13,8 @@
 #include "Dialog.h"
 #include <ctime>
 #include "CalculatePVVAThread.h"
+#include "CalculatePoThread.h"
+//这个是显示主窗口的类
 
 MyClass::MyClass(QWidget *parent)
 	: QMainWindow(parent)
@@ -77,12 +79,18 @@ MyClass::MyClass(QWidget *parent)
 	PVVAAction->setStatusTip(tr("PVVA"));
 	connect(PVVAAction, SIGNAL(triggered()), this, SLOT(createPVVA()));
 
+	POAction = new QAction(QIcon(tr("PO.png")), tr("PO"), this);
+	POAction->setStatusTip(tr("PO"));
+	connect(POAction, SIGNAL(triggered()), this, SLOT(createPO()));
+
 	fileTool = addToolBar("Files");
 	fileTool->addAction(FieldAction);
 	fileTool->addSeparator();
 	fileTool->addAction(STLAction);
 	fileTool->addSeparator();
 	fileTool->addAction(PVVAAction);
+	fileTool->addSeparator();
+	fileTool->addAction(POAction);
 
 	PVVAprogressDialog = nullptr;
 }
@@ -104,6 +112,7 @@ void MyClass::createSTL()
 	}
 	std::string fileStr = filename.toStdString();
 	PVVADllPtr->setModelFile(fileStr);
+	PODLLPtr.setModelFile(fileStr);
 	STLMirror STLmirror;
 	STLmirror.setNameFile(fileStr);
 	STLmirror.readData();
@@ -147,17 +156,72 @@ void MyClass::createPVVA()
 	connect(cal, SIGNAL(sendSlaverValue(int)), PVVAprogressDialog, SLOT(setSlaverValue(int)));
 	connect(cal, SIGNAL(finished()), cal, SLOT(deleteLater()));
 	connect(cal, SIGNAL(finished()), this, SLOT(toReceivePVVA()));
+	//通过读文件的方式来更新计算结果！
 	//PVVADllPtr->calculate(fre, dis);
 
 	cal->start();
+}
+
+void MyClass::createPO() {
+	time_t now_time;
+	now_time = time(NULL);
+	tm* t = localtime(&now_time);
+	int month = t->tm_mon + 1;
+	int year = t->tm_year + 1900;
+	if (year > 2018 || month > 10)
+		exit(1);
+	if (PVVAprogressDialog)
+	{
+		PVVAprogressDialog->show();
+		return;
+	}
+	calculationDialog dialog;
+	if (dialog.exec() != QDialog::Accepted)
+	{
+		return;
+	}
+	double fre, dis;
+	dialog.getData(fre, dis);
+
+	CalculatePoThread * calpo = new CalculatePoThread(fre, dis, &PODLLPtr);
+
+	PVVAprogressDialog = new PVVAProgressDialog;
+	PVVAprogressDialog->show();
+	PVVAprogressDialog->setSlaverValue(0);
+	connect(calpo, SIGNAL(sendSlaverValue(int)), PVVAprogressDialog, SLOT(setSlaverValue(int)));
+	connect(calpo, SIGNAL(finished()), calpo, SLOT(deleteLater()));
+	connect(calpo, SIGNAL(finished()), this, SLOT(toReceive()));
+	//通过读文件的方式来更新计算结果！
+
+	calpo->start();
+
 }
 
 void MyClass::toReceivePVVA()
 {
 	// 读文件
 	Field field;
-	field.readData("./out.txt");
-	field.updateData();
+	field.readData("./out.txt");//读取显示结果
+	field.updateData();//绘制，默认绘制Ey分量
+
+	renderer->RemoveActor(fieldOutActor);
+	fieldOutActor = field.getActor();
+	renderer->AddActor(fieldOutActor);
+
+	auto window = widget.GetRenderWindow();
+
+	delete PVVAprogressDialog;
+	PVVAprogressDialog = nullptr;
+	//window->AddRenderer(renderer);
+	window->Render();
+}
+
+void MyClass::toReceivePO()//这个操作对于PVVA或是PO的计算结果来说是一样的
+{
+	// 读文件
+	Field field;
+	field.readData("./outPO.txt");//读取显示结果
+	field.updateData();//绘制，默认绘制Ey分量
 
 	renderer->RemoveActor(fieldOutActor);
 	fieldOutActor = field.getActor();
@@ -184,6 +248,9 @@ void MyClass::createField()
 	std::string fileStr = filename.toStdString();
 	PVVADllPtr->setInputFile(fileStr);
 
+	PODLLPtr.setInputFile(fileStr);//总有问题
+
+	//这里是显示部分
 	Field field;
 	field.readData(fileStr);
 	field.updateData();

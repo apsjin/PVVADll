@@ -1,6 +1,7 @@
-//这个文件 定义 在CUDA中使用的 三维矢量(位置) 和 三维复矢量(场值)  金铭 v1.0
-#if !defined(CU_VECTOR3_H_)
-#define CU_VECTOR3_H_
+//这个文件 定义 在CUDA中使用的 三维矢量(位置)  金铭 v1.0
+#pragma once
+#if !defined(CUVECTOR3_H_)
+#define CUVECTOR3_H_
 
 
 #include <math.h>       /* import fabsf, sqrt */
@@ -8,7 +9,6 @@
 
 #if defined(__cplusplus)
 extern "C" {
-#endif /* __cplusplus */
 
 #include "vector_types.h"
 	
@@ -69,7 +69,7 @@ extern "C" {
 		result.z = _a.z*_b;
 		return result;
 	}
-	//返回一个向量乘数的向量
+	//返回一个向量乘数的向量_指针操作
 	__host__ __device__ __inline__ void cuVector3MulRS(const cuVector3 _a, const float _b, cuVector3 &result) {
 		result.x = _a.x*_b;
 		result.y = _a.y*_b;
@@ -111,9 +111,7 @@ extern "C" {
 
 
 	__host__ __device__ __inline__ float cuVector3Dot(const cuVector3 _a, const cuVector3 _b) {
-		float result;
-		result = _a.x*_b.x + _a.y*_b.y + _a.z*_b.z;
-		return result;
+		return _a.x*_b.x + _a.y*_b.y + _a.z*_b.z;
 	}
 
 	__host__ __device__ __inline__ void cuVector3DotS(const cuVector3 _a, const cuVector3 _b, float &result) {
@@ -149,8 +147,7 @@ extern "C" {
 		result = sqrt(result);
 	}
 
-
-
+#endif /* __cplusplus */
 	/*
 	typedef float3 cuFloatVector3;
 

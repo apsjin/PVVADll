@@ -408,3 +408,6 @@ CUDA kernel finished 40300 Source Point of 40401 SourcePoints
 CUDA kernel finished 40400 Source Point of 40401 SourcePoints
 CUDA kernel finished computation£¬Next to free CUDA Memories
 CUDA Memory Cleaned
+Second, CUDA kernel will launch 316 blocks of 128 threads for Computing Field to Current PO.
+Second, CUDA kernel will launch 316 blocks of 128 threads for Computing Field to Current PO.
+Second, CUDA kernel will launch 316 blocks of 128 threads for Computing Field to Current PO.

@@ -6,6 +6,7 @@
 #include <QToolBar>
 #include <QAction>
 #include "../PVVADll/PVVADll.h"
+#include "../CUDAPhysicalOptics/CUDAPhysicalOptics.h"//这个是对PO DLL的引用
 #include "PVVAProgressDialog.h"
 
 #include "vtkSmartPointer.h"
@@ -28,10 +29,13 @@ private slots:
 	void createField();
 	void createSTL();
 	void createPVVA();
+	void createPO();
 	void toReceivePVVA();
+	void toReceivePO();
 
 private:
 	PVVADll * PVVADllPtr;
+	CUDAPhysicalOptics PODLLPtr;
 
 	vtkSmartPointer<vtkOrientationMarkerWidget> widget1;
 	QVTKWidget widget; // vtk 显示窗口
@@ -47,6 +51,7 @@ private:
 	QAction * FieldAction;
 	QAction * STLAction;
 	QAction * PVVAAction;
+	QAction * POAction;
 
 	vtkSmartPointer<vtkImageActor> fieldInActor;
 	vtkSmartPointer<vtkImageActor> fieldOutActor;

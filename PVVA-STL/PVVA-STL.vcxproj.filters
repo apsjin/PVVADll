@@ -83,6 +83,15 @@
     <ClCompile Include="PVVAProgressDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_CalculatePOThread.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_CalculatePOThread.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="CalculatePOThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="myclass.h">
@@ -101,6 +110,9 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="PVVAProgressDialog.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="CalculatePOThread.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>

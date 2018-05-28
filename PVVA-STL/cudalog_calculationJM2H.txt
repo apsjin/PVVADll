@@ -1,0 +1,3 @@
+This is log file for Cuda Calculation 
+First, CUDA kernel will launch 316 blocks of 128 threads for device Input values to Zero on GPU.
+Failed to copy memory from device d_H_out to host h_H_out, at PO iteration step: 0 !

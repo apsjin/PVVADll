@@ -10,6 +10,7 @@
 #include <vtkPolyData.h>
 #include <vtkDelaunay2D.h>
 
+
 using namespace calculation;
 
 
@@ -468,6 +469,7 @@ double PVVA::CalSquare(const Vector3 & A, const Vector3 & B, const Vector3 & C, 
 	return tempS1 + tempS2;
 }
 
+//计算三角型面积
 double PVVA::CalSquare(const Vector3 & A, const Vector3 & B,
 	const Vector3 & C) const
 {
@@ -730,6 +732,7 @@ void PVVA::ReflectCUDA() {
 
 	//利用CUDA进行交点计算
 	CUDARayTracing *CUDArayTracing = new CUDARayTracing;
+	CUDArayTracing->getCUDAInfo();
 	CUDArayTracing->setRays(Plane, n_Plane, N, M);
 	CUDArayTracing->setSTL(mirror->getPolyData().GetPointer());
 	//delete CUDArayTracing;

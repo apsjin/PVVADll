@@ -1,0 +1,2 @@
+This is log file for Cuda Calculation 
+Failed to allocate device d_p_in!

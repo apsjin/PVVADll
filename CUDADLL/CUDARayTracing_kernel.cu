@@ -10,6 +10,7 @@
 //#include "thrust/host_vector.h"
 #include "cuVector3.cuh"
 
+
 //using namespace thrust;
 using namespace std;
 
@@ -890,7 +891,7 @@ void RunReflectionLine(int _NumPoints, float* _psourcex, float* _psourcey, float
 		float dx = _pdirx[si];
 		float dy = _pdiry[si];
 		float dz = _pdirz[si];
-		FindInterSection_register_struc<<< blocksPerGrid, threadsPerBlock >>>
+		FindInterSection_register<<< blocksPerGrid, threadsPerBlock >>>
 		(sx, sy, sz, dx, dy, dz,
 			si,
 			d_stlp1x, d_stlp1y, d_stlp1z,

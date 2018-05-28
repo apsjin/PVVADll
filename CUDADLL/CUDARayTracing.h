@@ -2,6 +2,7 @@
 *	created by liyun 2018/5/13
 *   function 封装cuda 对外API
 *   version 2.0 
+	注意一次完整的镜面反射PO计算包括：1，计算表面电流，2，计算出射场或者下一个镜面点的表面电流
 */
 #ifndef CUDARAYTRACING_H
 #define CUDARAYTRACING_H
@@ -29,8 +30,8 @@ public:
 	int * getSTLIndex() const { return STLIndex; }
 
 private:
-	int numSTL;	
 	int numPoints;
+	int numSTL;
 
 	bool* intersected;
 	int* STLIndex;
@@ -54,7 +55,6 @@ private:
 	float* stlp3x;
 	float* stlp3y;
 	float* stlp3z;
-	
 	
 };
 
