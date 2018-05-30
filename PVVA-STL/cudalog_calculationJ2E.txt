@@ -1,2 +1,44 @@
 This is log file for Cuda Calculation 
-Failed to allocate device d_p_in!
+First, CUDA kernel will launch 1322 blocks of 128 threads for device Input values to Zero on GPU.
+Second, CUDA kernel will launch 1322 blocks of 128 threads for Computing Field to Current PO.
+     CUDA kernel performs 0 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 1000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 2000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 3000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 4000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 5000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 6000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 7000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 8000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 9000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 10000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 11000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 12000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 13000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 14000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 15000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 16000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 17000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 18000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 19000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 20000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 21000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 22000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 23000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 24000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 25000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 26000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 27000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 28000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 29000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 30000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 31000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 32000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 33000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 34000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 35000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 36000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 37000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 38000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 39000 times of 40401 for Computing Current to Field PO.
+     CUDA kernel performs 40000 times of 40401 for Computing Current to Field PO.

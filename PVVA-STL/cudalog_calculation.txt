@@ -1,6 +1,6 @@
 This is log file for Cuda Calculation 
 First, CUDA kernel will launch 316 blocks of 128 threads for Setting intersection results to Zero on GPU.
-Second, CUDA kernel will launch 82 blocks of 128 threads for finding the intersection.
+Second, CUDA kernel will launch 1322 blocks of 128 threads for finding the intersection.
 CUDA kernel finished 0 Source Point of 40401 SourcePoints
 CUDA kernel finished 100 Source Point of 40401 SourcePoints
 CUDA kernel finished 200 Source Point of 40401 SourcePoints
@@ -408,6 +408,3 @@ CUDA kernel finished 40300 Source Point of 40401 SourcePoints
 CUDA kernel finished 40400 Source Point of 40401 SourcePoints
 CUDA kernel finished computation£¬Next to free CUDA Memories
 CUDA Memory Cleaned
-Second, CUDA kernel will launch 316 blocks of 128 threads for Computing Field to Current PO.
-Second, CUDA kernel will launch 316 blocks of 128 threads for Computing Field to Current PO.
-Second, CUDA kernel will launch 316 blocks of 128 threads for Computing Field to Current PO.

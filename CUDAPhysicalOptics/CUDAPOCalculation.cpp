@@ -98,7 +98,7 @@ void CUDAPOCalculation::setReflectSTL(void* _polyData) {
 	vtkPolyData* polyData = (vtkPolyData*)(_polyData);
 	numOut = polyData->GetNumberOfCells();
 
-	N1_out = numOut; N2_out = numOut;
+	N1_out = numOut; N2_out = 1;
 
 	px_out = new float[numOut];
 	py_out = new float[numOut];
@@ -316,7 +316,7 @@ void CUDAPOCalculation::getOutApertureE(complex<double>** &_Eu, complex<double>*
 			tempEy = complex<double>(Ey_out[ii].x, Ey_out[ii].y);
 			tempEz = complex<double>(Ez_out[ii].x, Ez_out[ii].y);
 			_Eu[i][j] = tempEx*u_out.x + tempEy*u_out.y + tempEz*u_out.z;
-			_Ev[i][j] = tempEx*v_out.x + tempEy*u_out.y + tempEz*u_out.z;
+			_Ev[i][j] = tempEx*v_out.x + tempEy*v_out.y + tempEz*v_out.z;
 			ii = ii + 1;
 		}
 	}
@@ -325,8 +325,8 @@ void CUDAPOCalculation::getOutApertureE(complex<double>** &_Eu, complex<double>*
 void CUDAPOCalculation::getSTLlistHfield(vector<complex<double>> &_Hx, vector<complex<double>> &_Hy, vector<complex<double>> &_Hz) {
 	for (int i = 0; i < numOut; i++) {
 		_Hx[i] = complex<double>(Hx_out[i].x, Hx_out[i].y);
-		_Hy[i] = complex<double>(Hx_out[i].x, Hy_out[i].y);
-		_Hz[i] = complex<double>(Hx_out[i].x, Hz_out[i].y);
+		_Hy[i] = complex<double>(Hy_out[i].x, Hy_out[i].y);
+		_Hz[i] = complex<double>(Hz_out[i].x, Hz_out[i].y);
 	}
 }
 

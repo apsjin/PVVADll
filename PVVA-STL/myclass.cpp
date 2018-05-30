@@ -190,7 +190,7 @@ void MyClass::createPO() {
 	PVVAprogressDialog->setSlaverValue(0);
 	connect(calpo, SIGNAL(sendSlaverValue(int)), PVVAprogressDialog, SLOT(setSlaverValue(int)));
 	connect(calpo, SIGNAL(finished()), calpo, SLOT(deleteLater()));
-	connect(calpo, SIGNAL(finished()), this, SLOT(toReceive()));
+	connect(calpo, SIGNAL(finished()), this, SLOT(toReceivePO()));
 	//通过读文件的方式来更新计算结果！
 
 	calpo->start();

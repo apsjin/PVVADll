@@ -81,7 +81,7 @@ extern "C" {
 		_a.y = _a.y*_b;
 		_a.z = _a.z*_b;
 	}
-	
+	//两个向量相加
 	__host__ __device__ __inline__ cuVector3 cuVector3Add(const cuVector3 _a, const cuVector3 _b) {
 		cuVector3 result;
 		result.x = _a.x + _b.x;
@@ -89,13 +89,13 @@ extern "C" {
 		result.z = _a.z + _b.z;
 		return result;
 	}
-
+	//两个向量相加 指针
 	__host__ __device__ __inline__ void cuVector3AddS(const cuVector3 _a, const cuVector3 _b, cuVector3 & result ) {
 		result.x = _a.x + _b.x;
 		result.y = _a.y + _b.y;
 		result.z = _a.z + _b.z;
 	}
-
+	//两个向量相减
 	__host__ __device__ __inline__ cuVector3 cuVector3Sub(const cuVector3 _a, const cuVector3 _b) {
 		cuVector3 result;
 		result.x = _a.x - _b.x;
@@ -103,22 +103,21 @@ extern "C" {
 		result.z = _a.z - _b.z;
 		return result;
 	}
+	//两个向量相减
 	__host__ __device__ __inline__ void cuVector3SubS(const cuVector3 _a, const cuVector3 _b, cuVector3 &result) {
 		result.x = _a.x - _b.x;
 		result.y = _a.y - _b.y;
 		result.z = _a.z - _b.z;
 	}
-
-
+	//两个向量点乘
 	__host__ __device__ __inline__ float cuVector3Dot(const cuVector3 _a, const cuVector3 _b) {
 		return _a.x*_b.x + _a.y*_b.y + _a.z*_b.z;
 	}
-
+	//两个向量点乘-指针
 	__host__ __device__ __inline__ void cuVector3DotS(const cuVector3 _a, const cuVector3 _b, float &result) {
 		result = _a.x*_b.x + _a.y*_b.y + _a.z*_b.z;
 	}
-
-
+	//两个向量叉乘
 	__host__ __device__ __inline__ cuVector3 cuVector3Cross(const cuVector3 _a, const cuVector3 _b) {
 		cuVector3 result;
 		result.x = _a.y*_b.z - _a.z*_b.y;
@@ -129,19 +128,20 @@ extern "C" {
 		//y3 = z1*x2 - x1*z2;
 		//z3 = x1*y2 - y1*x2;
 	}
+	//两个向量叉乘-指针
 	__host__ __device__ __inline__ void cuVector3CrossS(const cuVector3 _a, const cuVector3 _b, cuVector3 &result) {
 		result.x = _a.y*_b.z - _a.z*_b.y;
 		result.y = _a.z*_b.x - _a.x*_b.z;
 		result.z = _a.x*_b.y - _a.y*_b.x;
 	}
-
-
+	//向量取模值
 	__host__ __device__ __inline__ float cuVector3Abs(const cuVector3 _a) {
 		float result;
 		result = _a.x*_a.x + _a.y*_a.y + _a.z*_a.z;
 		result = sqrt(result);
 		return result;
 	}
+	//向量取模值，指针
 	__host__ __device__ __inline__ void cuVector3AbsS(const cuVector3 _a, float &result) {
 		result = _a.x*_a.x + _a.y*_a.y + _a.z*_a.z;
 		result = sqrt(result);

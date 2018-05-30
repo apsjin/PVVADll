@@ -234,12 +234,12 @@ void PVVA::Result(double dis)
 		for (int j = 0; j < M; j++)
 		{
 			outfile
-				<< abs(Ex1[i][j]) << " " << arg(Ex1[i][j]) << " "
-				<< abs(Ey1[i][j]) << " " << arg(Ey1[i][j]) << " "
-				<< abs(Ez1[i][j]) << " " << arg(Ez1[i][j]) << " "
-				<< abs(Hx1[i][j]) << " " << arg(Hx1[i][j]) << " "
-				<< abs(Hy1[i][j]) << " " << arg(Hy1[i][j]) << " "
-				<< abs(Hz1[i][j]) << " " << arg(Hz1[i][j]) << endl;
+				<< abs(Ex1[i][j]) << " " << arg(Ex1[i][j]) * 180/Pi << " "
+				<< abs(Ey1[i][j]) << " " << arg(Ey1[i][j]) * 180 / Pi << " "
+				<< abs(Ez1[i][j]) << " " << arg(Ez1[i][j]) * 180 / Pi << " "
+				<< abs(Hx1[i][j]) << " " << arg(Hx1[i][j]) * 180 / Pi << " "
+				<< abs(Hy1[i][j]) << " " << arg(Hy1[i][j]) * 180 / Pi << " "
+				<< abs(Hz1[i][j]) << " " << arg(Hz1[i][j]) * 180 / Pi << endl;
 		}
 
 }

@@ -59,15 +59,15 @@ kernel_SetZero(cuVector3* _d_p_in, float* _d_ds, cuComplexVector3* _d_J_in) {
 
 //Kernel 与 外调函数配对
 __global__ void	//包涵累加归约操作 有点麻烦，先将Block内的计算结果进行累加，然后每个Block的值存在一个数组的元素里。
-kernel_ZeroOrderJM2H(cuComplex _coe, float _k, cuVector3* _d_p_in, float* _d_ds, cuComplexVector3* _d_J_in,
-	cuVector3 _d_p_out, cuComplexVector3* &_d_H_out_blocks) {
+kernel_ZeroOrderJM2H(const cuComplex _coe, const float _k, const cuVector3* _d_p_in, const float* _d_ds, const cuComplexVector3* _d_J_in,
+	const cuVector3 _d_p_out, cuComplexVector3* _d_H_out_blocks) {
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
 	int blockid = int(i / threadsPerBlock);
 	//int shift = blockDim.x * blockIdx.x;
 	int ii = threadIdx.x;
 	
 	//不选择了，直接全算，补余区域计算结果自然为0
-	extern __shared__ cuComplexVector3 BlockResults[];//用于存储块内计算完成的结果
+	__shared__ cuComplexVector3 BlockResults[threadsPerBlock];//用于存储块内计算完成的结果
 	cuVector3 R = cuVector3Sub(_d_p_out, _d_p_in[i]); //3	//输出位置到输入位置的矢量
 	float ds = _d_ds[i];	//输入位置的面积
 	cuComplexVector3 J = _d_J_in[i];	//输入电流
@@ -95,6 +95,8 @@ kernel_ZeroOrderJM2H(cuComplex _coe, float _k, cuVector3* _d_p_in, float* _d_ds,
 	BlockResults[ii] = result;
 	__syncthreads();//进行至此进行同步，一个块内所有线程进行同步
 
+	//if (ii < 128) { BlockResults[ii] = cuComplexVector3Add(BlockResults[ii], BlockResults[ii + 128]); }
+	//__syncthreads();//进行至此进行同步，一个块内所有线程进行同步
 	if (ii < 64) { BlockResults[ii] = cuComplexVector3Add(BlockResults[ii], BlockResults[ii + 64]); }
 	__syncthreads();//进行至此进行同步，一个块内所有线程进行同步
 	if (ii < 32) { BlockResults[ii] = cuComplexVector3Add(BlockResults[ii], BlockResults[ii + 32]); }
@@ -111,19 +113,19 @@ kernel_ZeroOrderJM2H(cuComplex _coe, float _k, cuVector3* _d_p_in, float* _d_ds,
 		BlockResults[ii] = cuComplexVector3Add(BlockResults[ii], BlockResults[ii + 1]);
 		_d_H_out_blocks[blockid] = BlockResults[ii];//输出
 	}
-
 }
 
 __global__ void
-kernel_ZeroOrderJ2E(cuComplex _coe, float _k, cuVector3* _d_p_in, float* _d_ds, cuComplexVector3* _d_J_in,
-	cuVector3 _d_p_out, cuComplexVector3* &_d_E_out_blocks) {
+kernel_ZeroOrderJ2E(const cuComplex _coe, const float _k, const cuVector3* _d_p_in, const float* _d_ds, const cuComplexVector3* _d_J_in,
+	const cuVector3 _d_p_out, cuComplexVector3* _d_E_out_blocks) {
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
+	int blockid = int(i / threadsPerBlock);
 	//int shift = blockDim.x * blockIdx.x;
 	int ii = threadIdx.x;
 
 	//不选择了，直接全算，补余区域计算结果自然为0
 
-	extern __shared__ cuComplexVector3 BlockResults[];//用于存储块内计算完成的结果
+	__shared__ cuComplexVector3 BlockResults[threadsPerBlock];//用于存储块内计算完成的结果
 	cuVector3 R = cuVector3Sub(_d_p_out, _d_p_in[i]); //3	//输出位置到输入位置的矢量
 	float ds = _d_ds[i];	//输入位置的面积
 	cuComplexVector3 J = _d_J_in[i];	//输入电流
@@ -151,6 +153,8 @@ kernel_ZeroOrderJ2E(cuComplex _coe, float _k, cuVector3* _d_p_in, float* _d_ds, 
 	BlockResults[ii] = result;
 	__syncthreads();//进行至此进行同步，一个块内所有线程进行同步
 
+	//if (ii < 128) { BlockResults[ii] = cuComplexVector3Add(BlockResults[ii], BlockResults[ii + 128]); }
+	//__syncthreads();//进行至此进行同步，一个块内所有线程进行同步
 	if (ii < 64) { BlockResults[ii] = cuComplexVector3Add(BlockResults[ii], BlockResults[ii + 64]); }
 	__syncthreads();//进行至此进行同步，一个块内所有线程进行同步
 	if (ii < 32) { BlockResults[ii] = cuComplexVector3Add(BlockResults[ii], BlockResults[ii + 32]); }
@@ -165,11 +169,9 @@ kernel_ZeroOrderJ2E(cuComplex _coe, float _k, cuVector3* _d_p_in, float* _d_ds, 
 	__syncthreads();//进行至此进行同步，一个块内所有线程进行同步
 	if (ii < 1) {
 		BlockResults[ii] = cuComplexVector3Add(BlockResults[ii], BlockResults[ii + 1]);
-		_d_E_out_blocks[blockDim.x*blockIdx.x] = BlockResults[ii];//输出
+		_d_E_out_blocks[blockid] = BlockResults[ii];//输出
 	}
 }
-
-
 
 int RunJM2H(float _freq,int _NumSource, float* _px_in, float* _py_in, float* _pz_in,
 	float* _ds_in, cuComplex* Jmx_in, cuComplex* Jmy_in, cuComplex* Jmz_in,
@@ -221,7 +223,7 @@ int RunJM2H(float _freq,int _NumSource, float* _px_in, float* _py_in, float* _pz
 		return EXIT_FAILURE;
 	}
 	fprintf(cudalog, "First, CUDA kernel will launch %d blocks of %d threads for device Input values to Zero on GPU.\n", blocksPerGrid, threadsPerBlock);
-	fclose(cudalog); cudalog = fopen("./cudalog_calculation.txt", "a");
+	fclose(cudalog); cudalog = fopen("./cudalog_calculationJM2H.txt", "a");
 	kernel_SetZero <<< blocksPerGrid, threadsPerBlock >>>
 		(d_p_in, d_ds_in, d_J_in);
 
@@ -279,11 +281,12 @@ int RunJM2H(float _freq,int _NumSource, float* _px_in, float* _py_in, float* _pz
 	cuComplexVector3 HResult;
 	coe = cuCdivf(make_cuComplex(1.0,0.0),coe);
 	for (int i = 0; i < NumOut; i++) {
-		p_out = SetcuVector3(_px_out[i], _py_out[i], _py_out[i]);
+		p_out = SetcuVector3(_px_out[i], _py_out[i], _pz_out[i]);
 		
 		kernel_ZeroOrderJM2H <<< blocksPerGrid, threadsPerBlock >>>
 			(coe,k0,d_p_in,d_ds_in,d_J_in,p_out,d_H_out);
 		//计算完成了，每个Block会完成计算出一个cuComplexVector3 的积分值，将其传回（多少个Block,这个数组就有多长）
+
 		err = cudaMemcpy(h_H_out, d_H_out, sizeof(cuComplexVector3)*blocksPerGrid, cudaMemcpyDeviceToHost);
 		if (err != cudaSuccess) {
 			fprintf(cudalog, "Failed to copy memory from device d_H_out to host h_H_out, at PO iteration step: %d !\n",i, cudaGetErrorString(err));
@@ -299,6 +302,11 @@ int RunJM2H(float _freq,int _NumSource, float* _px_in, float* _py_in, float* _pz
 		Hx_out[i] = HResult.x;
 		Hy_out[i] = HResult.y;
 		Hz_out[i] = HResult.z;
+
+		if(i%1000 == 0){
+			fprintf(cudalog, "     CUDA kernel performs %d times of %d for Computing Field to Current PO.\n", i, NumOut, threadsPerBlock);
+			fclose(cudalog); cudalog = fopen("./cudalog_calculationJM2H.txt", "a");
+		}
 	}
 	
 	//清空cudaArray
@@ -363,7 +371,7 @@ int RunJ2E(float _freq, int _NumSource, float* _px_in, float* _py_in, float* _pz
 		return EXIT_FAILURE;
 	}
 	fprintf(cudalog, "First, CUDA kernel will launch %d blocks of %d threads for device Input values to Zero on GPU.\n", blocksPerGrid, threadsPerBlock);
-	fclose(cudalog); cudalog = fopen("./cudalog_calculation.txt", "a");
+	fclose(cudalog); cudalog = fopen("./cudalog_calculationJ2E.txt", "a");
 	kernel_SetZero << < blocksPerGrid, threadsPerBlock >> >
 		(d_p_in, d_ds_in, d_J_in);
 
@@ -402,7 +410,7 @@ int RunJ2E(float _freq, int _NumSource, float* _px_in, float* _py_in, float* _pz
 	int NumOut = _NumOut;
 
 	fprintf(cudalog, "Second, CUDA kernel will launch %d blocks of %d threads for Computing Field to Current PO.\n", blocksPerGrid, threadsPerBlock);
-	fclose(cudalog); cudalog = fopen("./cudalog_calculationJM2H.txt", "a");
+	fclose(cudalog); cudalog = fopen("./cudalog_calculationJ2E.txt", "a");
 
 	//computation parameters
 	float freq = _freq;
@@ -414,7 +422,7 @@ int RunJ2E(float _freq, int _NumSource, float* _px_in, float* _py_in, float* _pz
 	cuComplexVector3 EResult;
 	coe = cuCdivf(make_cuComplex(1.0, 0.0), coe);
 	for (int i = 0; i < NumOut; i++) {
-		p_out = SetcuVector3(_px_out[i], _py_out[i], _py_out[i]);
+		p_out = SetcuVector3(_px_out[i], _py_out[i], _pz_out[i]);
 
 		kernel_ZeroOrderJ2E << < blocksPerGrid, threadsPerBlock >> >
 			(coe, k0, d_p_in, d_ds_in, d_J_in, p_out, d_E_out);
@@ -434,6 +442,11 @@ int RunJ2E(float _freq, int _NumSource, float* _px_in, float* _py_in, float* _pz
 		Ex_out[i] = EResult.x;
 		Ey_out[i] = EResult.y;
 		Ez_out[i] = EResult.z;
+
+		if (i % 1000 == 0) {
+			fprintf(cudalog, "     CUDA kernel performs %d times of %d for Computing Current to Field PO.\n", i, NumOut, threadsPerBlock);
+			fclose(cudalog); cudalog = fopen("./cudalog_calculationJ2E.txt", "a");
+		}
 	}
 
 	//清空cudaArray

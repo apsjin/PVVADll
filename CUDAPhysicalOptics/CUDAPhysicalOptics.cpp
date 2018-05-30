@@ -84,15 +84,16 @@ void CUDAPhysicalOptics::calculate(double fre, double dis)
 	stlMirror.setNameFile(STLName);
 	stlMirror.readData();
 	
-	GraphTrans gt_inc;
+	GraphTrans gt_inc;//入射面的位置和方向信息
 	int M, N;
-	double ds;
+	double ds;//离散间隔
 	Vector3 u_input;	u_input.set(1.0, 0.0, 0.0);
 	Vector3 v_input;	v_input.set(0.0, 1.0, 0.0);
 	Vector3 n_input;	n_input.set(0.0, 0.0, 1.0);
 	Vector3 p_cen_in;
 	Vector3 p_center;
 	inputField.getSourcePara(gt_inc, M, N, ds);
+	//口面中心位置
 	p_cen_in.set(gt_inc.getTrans_x(), gt_inc.getTrans_y(), gt_inc.getTrans_z());
 
 	//设置旋转：
@@ -118,8 +119,15 @@ void CUDAPhysicalOptics::calculate(double fre, double dis)
 	cudapo.setPlaneApertureEField_D(Eu,Ev,u_input,v_input,p_cen_in,float(ds),M,N);
 	//设置反射网格
 	cudapo.setReflectSTL(stlMirror.getPolyData());
+
+	if (returnFloat) // 如果没有注册则不回调
+	{
+		returnFloat(30, user);
+	}
+
 	//计算场到电流
 	cudapo.calculateF2S();
+	//提取计算的表面电流
 	vector<complex<double>> Hx_Current;
 	vector<complex<double>> Hy_Current;
 	vector<complex<double>> Hz_Current;
@@ -132,6 +140,11 @@ void CUDAPhysicalOptics::calculate(double fre, double dis)
 	//设置第二部计算输入-表面电流
 	cudapo.setSTLCurrentSourceZeroOrder(stlMirror.getPolyData(), Hx_Current, Hy_Current, Hz_Current);
 	
+	if (returnFloat) // 如果没有注册则不回调
+	{
+		returnFloat(60, user);
+	}
+
 	//更新出射场的位置
 	p_center = p_cen_in;
 
@@ -168,12 +181,17 @@ void CUDAPhysicalOptics::calculate(double fre, double dis)
 	cudapo.setOutputAperture(u_out,v_out,p_cen_out,float(ds),M,N);
 	//CUDAPO计算
 	cudapo.calculateS2F();
+
+	if (returnFloat) // 如果没有注册则不回调
+	{
+		returnFloat(90, user);
+	}
 	//文件输出输出
-	complex<double>** Eu_out;	Eu_out = Allocate_2D(Eu_out, M, N);
-	complex<double>** Ev_out;	Ev_out = Allocate_2D(Ev_out, M, N);
+	complex<double>** Eu_out = NULL;	Eu_out = Allocate_2D(Eu_out, M, N);
+	complex<double>** Ev_out = NULL;	Ev_out = Allocate_2D(Ev_out, M, N);
 	cudapo.getOutApertureE(Eu_out,Ev_out);
 	//文件输出：
-	ofstream outfile("./out.txt");
+	ofstream outfile("./outPO.txt");
 	outfile << gt_out.getTrans_x() << " "
 		<< gt_out.getTrans_y() << " "
 		<< gt_out.getTrans_z() << " "
@@ -186,11 +204,17 @@ void CUDAPhysicalOptics::calculate(double fre, double dis)
 		for (int j = 0; j < N; j++)
 		{
 			outfile
-				<< abs(Eu_out[i][j]) << " " << arg(Eu_out[i][j]) << " "
-				<< abs(Ev_out[i][j]) << " " << arg(Ev_out[i][j]) << " " << endl;
+				<< abs(Eu_out[i][j]) << " " << arg(Eu_out[i][j]) * 180 / Pi << " "
+				<< abs(Ev_out[i][j]) << " " << arg(Ev_out[i][j]) * 180 / Pi << " " << endl;
 		}
 	//写文件结束，结束
+	if (returnFloat) // 如果没有注册则不回调
+	{
+		returnFloat(100, user);
+	}
 
+	Free_2D(Eu_out);
+	Free_2D(Ev_out);
 }
 
 void CUDAPhysicalOptics::SetReturnFloat(void(*returnFloat)(float, void *), void * _user)
